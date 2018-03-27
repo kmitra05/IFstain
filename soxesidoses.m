@@ -1,31 +1,32 @@
-clear all
-t=dir('Raw');
-mkdir('nuclear')
-for i=1:1:numel(dir('Raw'))-2
-    FileTif=t(i+2).name;
-    tmpname=FileTif;
-    FileTif=fullfile(pwd,'Raw',FileTif);
-    InfoImage=imfinfo(FileTif);
-    mImage=InfoImage(1).Width;
-    nImage=InfoImage(1).Height;
-    NumberImages=length(InfoImage);
-    FinalImage=zeros(nImage,mImage,NumberImages,'uint16');
-        for j=1:NumberImages
-        FinalImage(:,:,j)=imread(FileTif,'Index',j);
-        end
-    a=FinalImage(:,:,1);
-    fimg=tmpname;
-    fimg=fullfile(pwd,'nuclear',fimg);
-    imwrite(a,fimg);
-end
-t=dir('ilastik');
+% clear all
+% t=dir('Raw');
+% mkdir('nuclear')
+% for i=1:1:numel(dir('Raw'))-2
+%     FileTif=t(i+2).name;
+%     tmpname=FileTif;
+%     FileTif=fullfile(pwd,'Raw',FileTif);
+%     InfoImage=imfinfo(FileTif);
+%     mImage=InfoImage(1).Width;
+%     nImage=InfoImage(1).Height;
+%     NumberImages=length(InfoImage);
+%     FinalImage=zeros(nImage,mImage,NumberImages,'uint16');
+%         for j=1:NumberImages
+%         FinalImage(:,:,j)=imread(FileTif,'Index',j);
+%         end
+%     a=FinalImage(:,:,1);
+%     fimg=tmpname;
+%     fimg=fullfile(pwd,'nuclear',fimg);
+%     imwrite(a,fimg);
+% end   
+%%
+ildir=dir('Ilastik');
 mkdir('masks');
 for pos=1:1:numel(dir('Ilastik'))-2
-h5file = sprintf('nuclear_f%04d.h5',pos);
-h5tobinmaskFILE(h5file, pos, 2, 1);
+h5file = ildir(pos+2).name;
+h5tobinmaskFILE(h5file, pos, 2, 1, t);
 end
 %% Runtime functions
-function h5tobinmaskFILE(filename,pos,label,tpt)
+function h5tobinmaskFILE(filename,pos,label,tpt,t)
     % for identifying what are artifacts
     roundStdThres = 19;%the margin of standard deviation before and after hybridization nuc 1 and 3 and nuc 2 and 4 pictures to identify artifacts
     overallStdThres = 50; % the margin of standard deviation before and after hybridization nuc 1,2,3,4 pictures to identify artifacts
@@ -39,9 +40,10 @@ function h5tobinmaskFILE(filename,pos,label,tpt)
     [wshedcc] = makemask({filename}, pos, label, tpt); % gets binary mask
     
     ccshedcc = wshedcc;%bwconncomp(wshedcc); % bwconncomp was not working so I am not using it
-    fn1 = sprintf('mask_f%04d.tif',pos);
+    fn1 = t(pos+2).name;
     fn1=fullfile(pwd,'masks',fn1);
     imwrite(ccshedcc, fn1);
+    imshow(ccshedcc)
     
 end
 
@@ -50,7 +52,7 @@ function [wshedcc] = makemask(filename,pos, label, tpt)
     [io2, ~]=readmaskfilesKM(filename, label, tpt);% creates the binary mask for that specific
     shortform = filename;
     
-    io2DirtRemoved = bwareaopen(io2, 100);% gets rid of small things the program classified as 
+    io2DirtRemoved = bwareaopen(io2, 5);% gets rid of small things the program classified as 
     io2MoreFilled = io2DirtRemoved;
     io2MoreFilled = imfill(io2DirtRemoved, 'holes');
     cc = bwconncomp(io2MoreFilled);
