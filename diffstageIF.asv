@@ -22,7 +22,7 @@ for p = 1:numel(dir('Ilastik'))-3% don't need to skip the first one
     mask=imread(mfile);
     k=whos('mask');
     [voronoi, centers] = voronoiPolygon(mask,k.size(1),k.size(2));
-    new_mask = voronoiMaskIntersectionIF(voronoi, mask, 8);
+    new_mask = voronoiMaskIntersectionIF(voronoi, mask,);
     imshow(new_mask);
     cc3 = bwconncomp(new_mask);
     if strcmp(string(imdir(p+2).name),'A.tif') | strcmp(string(imdir(p+2).name),'B.tif')...
